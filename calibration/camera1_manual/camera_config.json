@@ -1,0 +1,45 @@
+{
+  "camera_name": "camera1",
+  "calibration_date": "2026-09-15T17:03:13.037604",
+  "board": {
+    "squares_x": 7,
+    "squares_y": 5,
+    "square_length_m": 0.03,
+    "marker_length_m": 0.017,
+    "dictionary_id": 8
+  },
+  "calibration_result": {
+    "rms_error": 0.6847519254317844,
+    "camera_matrix": [
+      [
+        2234.3169390846897,
+        0.0,
+        860.9315534137407
+      ],
+      [
+        0.0,
+        2249.640721271644,
+        684.5935579851326
+      ],
+      [
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "dist_coeffs": [
+      0.23813612234390172,
+      -2.163998505580348,
+      0.003500488350625764,
+      -0.0023611694622164966,
+      11.42810405262732
+    ],
+    "image_size": [
+      1920,
+      1080
+    ],
+    "images_used": 46,
+    "images_discarded": 10,
+    "method": "chessboard_classic"
+  }
+}
