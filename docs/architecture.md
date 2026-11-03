@@ -1,6 +1,6 @@
 # Scanner de Insetos: referencial de arquitetura (etapa 1)
 
-Versão 1.0, 03/11/2026. Este documento delimita o que se desenvolve na etapa 1 e como as partes conversam. Ele é a referência para o desenvolvimento com o Claude Code nos dois repositórios:
+Versão 1.1, 03/11/2026. Este documento delimita o que se desenvolve na etapa 1 e como as partes conversam. Ele é a referência para o desenvolvimento com o Claude Code nos dois repositórios:
 
 | Frente | Repositório | Guia do Claude Code |
 |---|---|---|
@@ -52,20 +52,20 @@ Base: `sistema_simples.md` (referência principal), `comutador_vbus_conexoes.md`
 | Peça | Detalhe |
 |---|---|
 | Máquina | Ender 5 Plus, área 350 × 350 mm, a mesa desce em Z. Firmware Marlin, serial 115200. Fim de curso de X deslocado ~45 mm pelo suporte da câmera (medir; ver seção 11). |
-| Microcontrolador | **ESP32-C6** (placa de desenvolvimento tipo ESP32-C6-DevKitC-1). |
+| Microcontrolador | **Seeed Studio XIAO ESP32C6**. Uma única porta USB-C, que é o USB nativo do chip (USB Serial/JTAG): alimenta, grava e é a serial com o PC. |
 | Câmera | Nikon Coolpix L120, alimentada pela entrada 5 V (fonte própria). VID 04B0, PID 0185. |
 | Servos | Servo comum (SG92R ou similar), 50 Hz, pulso 500–2400 µs. Alimentação 5 V com GND comum ao ESP32. |
 | Comutador USB | **Solução D**: um módulo relé "ESP-01 Relay" (sem o ESP-01) cortando **só o GND** do cabo USB da câmera. D+ e D− direto, VBUS desligado. |
 
 **Pinos do ESP32-C6** (padrão; ficam como constantes no topo do firmware)
 
-| Função | GPIO | Observação |
-|---|---|---|
-| Servo ZOOM | 18 | PWM 50 Hz |
-| Servo SHOT | 19 | PWM 50 Hz |
-| Relé do USB | 2 | Ligado no furo GPIO0 do soquete ESP-01 do módulo. **Ativo em nível baixo.** |
+| Função | Pino da XIAO | GPIO | Observação |
+|---|---|---|---|
+| Servo ZOOM | D10 | 18 | PWM 50 Hz |
+| Servo SHOT | D8 | 19 | PWM 50 Hz |
+| Relé do USB | D2 | 2 | Ligado no furo GPIO0 do soquete ESP-01 do módulo. **Ativo em nível baixo.** |
 
-Evitar no C6: GPIO 4, 5, 8, 9 e 15 (modo de boot), 12 e 13 (USB nativo), 16 e 17 (UART0). Se os pinos 18/19 não estiverem livres na placa usada, trocar só as constantes e atualizar esta tabela.
+No firmware os pinos são sempre pelo **número do GPIO** (18, 19, 2), nunca pelo rótulo `Dx`. Pinos livres que sobram: D0 (GPIO0), D1 (GPIO1), D3 (GPIO21), D4 (GPIO22), D5 (GPIO23), D9 (GPIO20). Não usar: D6/D7 (GPIO16/17, UART0, saída do log de boot). Internos da placa, sem uso: GPIO3 e GPIO14 (chave de antena), GPIO15 (LED do usuário, strapping), GPIO9 (botão BOOT, strapping), GPIO12/13 (USB).
 
 **Lógica do relé**
 
@@ -128,7 +128,7 @@ Em qualquer erro: `USB:OFF`, parar o movimento (não enviar mais G-code), estaci
 
 Esta seção é o contrato entre as duas frentes. O firmware implementa exatamente isto, e o `esp32.py` usa exatamente isto.
 
-**Transporte:** USB serial (USB-CDC do C6 ou ponte UART da placa), 115200 baud, 8N1. Comandos em texto ASCII, uma linha por comando, terminada em `\n` (aceitar também `\r\n`). Maiúsculas e minúsculas são equivalentes. Linha com mais de 64 caracteres é descartada com `ERRO FORMATO`.
+**Transporte:** USB serial pelo USB nativo da XIAO (USB CDC; o baud rate é ignorado, mas o PC abre a 115200), 8N1. Comandos em texto ASCII, uma linha por comando, terminada em `\n` (aceitar também `\r\n`). Maiúsculas e minúsculas são equivalentes. Linha com mais de 64 caracteres é descartada com `ERRO FORMATO`.
 
 **Formato do comando:** `ALVO:ACAO[:VALOR]`, ou só `ALVO` para `PING` e `STATUS`.
 
@@ -369,7 +369,7 @@ Em 03/11 os dois repositórios ainda estão no primeiro commit. Ordem sugerida (
 | Tempo até a câmera aparecer no Windows | `usb-test --cycles 20` | `enumerate_timeout_s` |
 | Limites reais de X/Y/Z e deslocamento do fim de curso de X | `M114` nos cantos + régua | `printer` no `config.json` |
 | Altura de trabalho `z_work` em que o autofoco foca o inseto | teste manual | `scan.z_work` |
-| Pinos 18/19 livres na placa C6 usada | serigrafia da placa | tabela da seção 3 |
+| ID da placa no PlatformIO compila (`seeed-xiao-esp32-c6`) | `pio run` | `platformio.ini` |
 | Tempo de `ZOOM:HOME` até o batente | teste manual | firmware |
 
 ## 12. Histórico de decisões
@@ -378,4 +378,4 @@ Em 03/11 os dois repositórios ainda estão no primeiro commit. Ordem sugerida (
 | 06/10 | A L120 não manda imagem ao vivo pela HDMI: centralização **foto a foto** via USB. |
 | 13/10 | **Solução D**: o relé corta só o GND do USB; D+/D− direto, VBUS desligado (fuga medida de 0,1 µA). |
 | 13/10 | Sistema simplificado (`sistema_simples.md`): 4 arquivos Python, autofoco, zoom opcional. |
-| 03/11 | ESP32-C6 já na etapa 1; protocolo padronizado com uma resposta `OK`/`ERRO` por comando; a frente de aquisição cobre todo o programa do PC. |
+| 03/11 | Placa: XIAO ESP32C6 (servos em D10/D8, relé em D2). ESP32-C6 já na etapa 1; protocolo padronizado com uma resposta `OK`/`ERRO` por comando; a frente de aquisição cobre todo o programa do PC. |
